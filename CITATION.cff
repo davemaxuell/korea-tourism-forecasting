@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this project, please cite it using the metadata below."
+title: "K-Culture, Exchange Rates, and Foreign Tourism in Korea"
+type: software
+authors:
+  - name: "K-Culture Tourism Forecasting contributors"
+abstract: "A reproducible monthly forecasting project studying relationships between K-culture search-interest indices, KRW-denominated exchange rates, and foreign tourism arrivals in Korea."
+keywords:
+  - tourism
+  - forecasting
+  - Korea
+  - K-culture
+  - exchange rates
+  - Google Trends
+license: MIT
+date-released: 2026-05-13
+repository-code: "https://github.com/OWNER/REPOSITORY"

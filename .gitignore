@@ -1,0 +1,42 @@
+# Local environments and secrets
+.env
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.ipynb_checkpoints/
+
+# Python tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Packaging/build artifacts
+dist/
+build/
+*.egg-info/
+
+# Generated outputs
+outputs/figures/*
+outputs/models/*
+!outputs/figures/.gitkeep
+!outputs/models/.gitkeep
+
+# Model checkpoints and training logs
+*.ckpt
+lightning_logs/
+
+# Legacy exploratory workspace kept locally but not intended for public GitHub
+K-문화 관심도 데이터/
+외국인 관광 방문수/
+환율/
+Prediction/
+README.txt
+Project_Summary.txt

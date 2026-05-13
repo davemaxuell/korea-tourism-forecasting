@@ -1,0 +1,9 @@
+# Optional dependencies for reproducing exploratory notebooks and advanced models.
+seaborn>=0.13
+statsmodels>=0.14
+xgboost>=2.0
+prophet>=1.1
+tensorflow>=2.16
+torch>=2.3
+lightning>=2.3
+pytorch-forecasting>=1.0
