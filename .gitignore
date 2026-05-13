@@ -27,6 +27,7 @@ build/
 outputs/figures/*
 outputs/models/*
 !outputs/figures/.gitkeep
+!outputs/figures/*.png
 !outputs/models/.gitkeep
 
 # Model checkpoints and training logs

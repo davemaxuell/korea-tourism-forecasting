@@ -12,6 +12,19 @@ outputs/           Generated figures and model outputs
 docs/              Notes for publishing and project maintenance
 ```
 
+## Results
+
+### Holdout Forecasts — Full Period (2023–2025)
+![Holdout predictions full period](outputs/figures/holdout_predictions_full_period.png)
+
+### Holdout Forecasts — Post-COVID Recovery (2022–2025)
+![Holdout predictions post-COVID](outputs/figures/holdout_predictions_post_covid.png)
+
+### Baseline Model Comparison
+![Baseline predictions](outputs/figures/baseline_predictions.png)
+
+See [`reports/model_results.md`](reports/model_results.md) for the full metrics table (WAPE, RMSE, MAE).
+
 ## Research Questions
 
 - Does global interest in K-pop, K-drama, K-food, and K-culture move with foreign tourist arrivals?
