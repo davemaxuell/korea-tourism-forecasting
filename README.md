@@ -1,151 +1,121 @@
-# K-Culture, Exchange Rates, and Foreign Tourism in Korea
+# Korea Tourism Forecasting
 
-This project analyzes how global K-culture interest and exchange-rate movements relate to monthly foreign tourist arrivals in Korea from 2015 to 2025.
+[![CI](https://github.com/davemaxuell/korea-tourism-forecasting/actions/workflows/ci.yml/badge.svg)](https://github.com/davemaxuell/korea-tourism-forecasting/actions/workflows/ci.yml)
+![Python 3.11–3.13](https://img.shields.io/badge/python-3.11%E2%80%933.13-3776AB)
+[![License: MIT](https://img.shields.io/badge/code-MIT-007f86)](LICENSE)
 
-The repository now has a clean public workflow:
+**Do K-culture search interest and exchange rates improve next-month tourism forecasts beyond recent visitor history?**
+
+A reproducible study of **129 monthly observations, January 2015–September 2025**, predicting foreign arrivals to Korea for tourism purposes. The project compares simple benchmarks with three regressors, tests the incremental value of external signals, and exposes every forecast for inspection.
+
+![Monthly tourism arrivals and the pandemic disruption](reports/figures/arrivals_history.png)
+
+## Read the evidence
+
+Start with the [generated results report](reports/model_results.md): candidates selected on development data, final holdout scores, and a feature-ablation table. The [monthly predictions](reports/predictions.csv) and [metrics](reports/metrics.csv) make the conclusions auditable.
+
+![Monthly holdout forecasts](reports/figures/holdout_forecasts.png)
+
+The plots show candidates selected **before** the final holdout. All candidates are reported, including last-month and seasonal-naive benchmarks. Added complexity has to earn its place; the experiment does not assume that K-culture signals will help.
+
+| Scenario | Development-selected candidate | Final holdout WAPE | Seasonal-naive WAPE |
+| --- | --- | ---: | ---: |
+| Full period | Last month | 9.88% | 28.68% |
+| Recovery period | Random forest · visitor history | 9.93% | 14.16% |
+
+External signals did not improve the random forest in either holdout. The full-period history-only forest scored 6.76% WAPE, but it was **not** the development-selected candidate. This distinction separates an observed result from an honest selection procedure.
+
+## What makes the experiment reviewable
+
+| Decision | Implementation |
+| --- | --- |
+| Predict one month ahead | Each forecast uses earlier observations; models refit at every monthly origin. |
+| Separate selection from assessment | Development dates precede the final holdout. Candidate selection uses development WAPE only. |
+| Test the research question directly | Matched feature sets: history, history + FX, history + interest, and all signals. |
+| Keep strong simple benchmarks | Last month and the same month last year compete with every learned model. |
+| Guard the time axis | Duplicate months, gaps, invalid values, and misaligned lags raise errors. |
+| Make results reproducible | Locked dependencies, fixed seed, generated reports, and SHA-256 input/code/artifact manifests. |
+
+This is **retrospective forecasting research**. It assumes previous-month observations are available at each origin. Publication delays, revised data, and historical Google Trends vintages are not available in the source files, so the results do not establish deployable real-time accuracy. The pandemic creates a large structural break; the recovery scenario is particularly small. See [methodology and limitations](docs/METHODOLOGY.md).
+
+## Reproduce
+
+Python 3.12 is the reference environment; 3.11–3.13 are supported. Run from the repository root. The default workflow is offline after dependency installation and requires no API key.
+
+Using [uv](https://docs.astral.sh/uv/), with the checked-in lockfile:
+
+```bash
+uv sync --frozen --extra dev
+uv run --frozen korea-tourism reproduce
+uv run --frozen pytest
+```
+
+Or install with standard Python tooling (resolves compatible versions rather than the exact lock):
+
+```bash
+python -m venv .venv
+# macOS / Linux
+source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev]"
+python -m korea_tourism reproduce
+python -m pytest
+```
+
+The experiment fits 12 model/feature combinations at 72 monthly origins, plus two benchmarks. Allow a few minutes depending on hardware. Regeneration replaces the processed data and report artifacts in this checkout.
+
+Individual stages:
+
+```bash
+korea-tourism build
+korea-tourism evaluate --seed 42
+```
+
+Use `--root PATH` on either command to target another data workspace. The original `python src/build_dataset.py` and `python src/train_baseline.py` entry points remain available after installation.
+
+## Experiment design
+
+| Scenario | Eligible training history | Development forecasts | Final holdout |
+| --- | --- | --- | --- |
+| Full period | Jan 2016 onward, after 12 lag months | Jan 2021–Sep 2023 · 33 months | Oct 2023–Sep 2025 · 24 months |
+| Recovery period | Jul 2022 onward | Jul 2024–Jan 2025 · 7 months | Feb–Sep 2025 · 8 months |
+
+Models: ridge regression, random forest, and histogram gradient boosting, all with `log1p` targets and fixed hyperparameters. Ridge scaling is fitted inside each training window. Features use 1-, 2-, 3-, and 12-month lags plus sine/cosine month seasonality. The retrospective COVID-period flag is excluded from forecasting inputs.
+
+WAPE is the selection metric; MAE, RMSE, signed bias, and skill against seasonal naive provide complementary views. Errors are pooled across monthly predictions. No random train/test split, holdout tuning, or causal interpretation is used.
+
+## Repository map
 
 ```text
-data/raw/          Source files used by the reproducible pipeline
-data/processed/    Clean monthly datasets generated from raw inputs
-src/               Reproducible data and baseline-model scripts
-outputs/           Generated figures and model outputs
-docs/              Notes for publishing and project maintenance
+src/korea_tourism/
+  data.py           Raw parsing, monthly joins, calendar features, lags
+  validation.py     Shared data contracts
+  models.py         Fixed estimators and explicit feature groups
+  evaluation.py     Monthly backtests, candidate selection, metrics
+  reporting.py      Generated report, figures, provenance manifest
+  fetch.py          Optional ECOS download to a staging directory
+tests/              Unit, regression, integration, and artifact checks
+data/raw/           Preserved research inputs
+data/processed/     Rebuildable, committed monthly tables
+reports/            Generated evidence: predictions, metrics, figures, manifest
+docs/               Methods, source caveats, and maintenance notes
+uv.lock             Resolved dependency versions and package hashes
 ```
 
-## Results
+## Data and provenance
 
-### Holdout Forecasts — Full Period (2023–2025)
-![Holdout predictions full period](outputs/figures/holdout_predictions_full_period.png)
+The inputs comprise tourism-purpose visitor spreadsheets, Google Trends exports and keyword tables, and KRW-denominated exchange-rate tables. See the [data dictionary](data/README.md) and [source inventory](docs/DATA_SOURCES.md) for units, transformations, and missing provenance. Google Trends values are normalized interest indices, not search counts. Source attribution inherited from the original project is distinguished from independently verified provenance.
 
-### Holdout Forecasts — Post-COVID Recovery (2022–2025)
-![Holdout predictions post-COVID](outputs/figures/holdout_predictions_post_covid.png)
+The optional ECOS downloader is separate from reproduction. Set `ECOS_API_KEY` in the environment, then run `korea-tourism fetch --start 201501 --end 202509`. It writes to ignored `data/external/` for review; it does not replace the bundled inputs. `.env.example` is a template, and `.env` is not automatically loaded.
 
-### Baseline Model Comparison
-![Baseline predictions](outputs/figures/baseline_predictions.png)
-
-See [`reports/model_results.md`](reports/model_results.md) for the full metrics table (WAPE, RMSE, MAE).
-
-## Research Questions
-
-- Does global interest in K-pop, K-drama, K-food, and K-culture move with foreign tourist arrivals?
-- Do exchange-rate changes have immediate or lagged relationships with tourism demand?
-- Which signals are useful for simple monthly visitor forecasting?
-
-## Data Sources
-
-- Foreign visitor arrivals: Korea tourism immigration statistics, monthly tourism-purpose arrivals.
-- K-culture interest: Google Trends exports for Web Search and YouTube Search.
-- Keyword search interest: monthly Google/YouTube Trends keyword-index tables. These are normalized indices, not absolute search counts.
-- Exchange rates: monthly KRW-denominated exchange rates. The clean baseline currently uses USD/KRW and JPY/KRW because CNY/KRW coverage is too sparse in the available ECOS export.
-
-## Setup
+## Development
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv run --frozen ruff check src tests
+uv run --frozen ruff format --check src tests
+uv run --frozen pytest --cov=korea_tourism --cov-report=term-missing
 ```
 
-On Windows PowerShell:
+CI checks supported Python versions, rebuilds data from raw inputs, tests temporal isolation and report generation, and runs the full reference experiment. See [contributing](CONTRIBUTING.md) for the artifact update workflow.
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-Optional notebook/deep-learning dependencies are listed separately:
-
-```bash
-pip install -r requirements-optional.txt
-```
-
-## Rebuild Data
-
-```bash
-python src/build_dataset.py
-```
-
-This creates:
-
-- `data/processed/foreign_visitors_monthly.csv`
-- `data/processed/exchange_rates_monthly.csv`
-- `data/processed/search_trends_monthly.csv`
-- `data/processed/k_culture_interest_monthly.csv`
-- `data/processed/tourism_features_monthly.csv`
-- `data/processed/tourism_features_monthly_with_lags.csv`
-
-## Train Baseline Models
-
-```bash
-python src/train_baseline.py
-```
-
-The baseline uses only lagged observed predictors plus known calendar indicators, so it is a leakage-safe forecasting baseline rather than an after-the-fact explanatory regression.
-
-The training script evaluates:
-
-- Seasonal naive forecasts using the same month last year.
-- Log-target ridge regression.
-- Log-target random forest.
-- Log-target histogram gradient boosting.
-- Chronological holdout tests.
-- Expanding-window rolling backtests.
-- Full-period and post-COVID scenarios.
-- Permutation feature importance for the best holdout model.
-
-Main outputs:
-
-- `outputs/models/holdout_metrics.csv`
-- `outputs/models/rolling_backtest_summary.csv`
-- `outputs/models/rolling_backtest_metrics.csv`
-- `outputs/models/permutation_importance.csv`
-- `outputs/figures/holdout_predictions_full_period.png`
-- `outputs/figures/holdout_predictions_post_covid.png`
-
-Generated outputs are ignored by Git by default.
-
-## Development Checks
-
-Install development tools:
-
-```bash
-pip install -r requirements-dev.txt
-```
-
-Run the public-repo checks:
-
-```bash
-ruff check src tests
-ruff format --check src tests
-python src/build_dataset.py
-pytest
-```
-
-You can also enable local pre-commit checks:
-
-```bash
-pre-commit install
-```
-
-## Optional ECOS Exchange-Rate Fetch
-
-Create a local `.env` or set the environment variable manually:
-
-```bash
-export ECOS_API_KEY=your_key_here
-python src/fetch_exchange_rates.py --start 201501 --end 202512
-```
-
-Do not commit `.env` or API keys. The repository includes `.env.example` only.
-
-## Notes
-
-The original exploratory notebooks and Korean-named working folders are preserved locally, but `.gitignore` excludes them from the public repository. The public GitHub version should focus on `src/`, `data/raw/`, `data/processed/`, `docs/`, and the root documentation files.
-
-Additional project documentation:
-
-- `docs/METHODOLOGY.md` explains the modeling and leakage-control choices.
-- `docs/DATA_SOURCES.md` documents source families and reuse notes.
-- `docs/PUBLICATION_CHECKLIST.md` lists final checks before publishing.
-- `reports/model_results.md` keeps a compact, committed summary of baseline results.
+Code is [MIT licensed](LICENSE). Third-party datasets retain their providers' applicable terms; the code license does not grant data redistribution rights. Citation metadata is in [CITATION.cff](CITATION.cff).

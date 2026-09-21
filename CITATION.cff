@@ -1,6 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this project, please cite it using the metadata below."
-title: "K-Culture, Exchange Rates, and Foreign Tourism in Korea"
+title: "Korea Tourism Forecasting"
+version: "0.2.0"
 type: software
 authors:
   - name: "K-Culture Tourism Forecasting contributors"
@@ -13,5 +14,4 @@ keywords:
   - exchange rates
   - Google Trends
 license: MIT
-date-released: 2026-05-13
 repository-code: "https://github.com/davemaxuell/korea-tourism-forecasting"

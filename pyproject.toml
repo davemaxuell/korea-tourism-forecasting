@@ -1,6 +1,10 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "korea-tourism-forecasting"
-version = "0.1.0"
+version = "0.2.0"
 description = "Monthly forecasting of foreign tourism in Korea using K-culture interest and exchange-rate signals."
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
@@ -9,10 +13,36 @@ authors = [
   { name = "K-Culture Tourism Forecasting contributors" }
 ]
 keywords = ["tourism", "forecasting", "korea", "k-culture", "exchange-rates"]
+dependencies = [
+  "pandas>=2.2,<3", "numpy>=1.26,<3", "matplotlib>=3.8,<4",
+  "requests>=2.31,<3", "xlrd>=2.0,<3", "scikit-learn>=1.4,<2",
+  "threadpoolctl>=3.2,<4",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3,<10", "pytest-cov>=6,<8", "ruff>=0.15,<0.16", "pre-commit>=4,<5"]
+
+[project.scripts]
+korea-tourism = "korea_tourism.__main__:main"
+
+[project.urls]
+Repository = "https://github.com/davemaxuell/korea-tourism-forecasting"
+Issues = "https://github.com/davemaxuell/korea-tourism-forecasting/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["korea_tourism*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+addopts = "-ra --strict-markers"
+markers = ["integration: rebuild checked-in raw data and verify reproducibility"]
+
+[tool.coverage.run]
+source = ["korea_tourism"]
+
+[tool.coverage.report]
+show_missing = true
 
 [tool.ruff]
 line-length = 100

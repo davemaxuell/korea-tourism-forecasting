@@ -1,55 +1,31 @@
-# Data Dictionary
+# Data dictionary
 
-## Raw Data
+All processed dates are ISO month starts (`YYYY-MM-01`). Raw files are preserved. Run `korea-tourism build` to regenerate the six processed CSVs; never edit processed tables by hand.
 
-`data/raw/foreign_visitors/`
+| Table | Grain | Rows in reference snapshot |
+| --- | --- | ---: |
+| `foreign_visitors_monthly.csv` | One tourism-purpose arrival count per month | 129 |
+| `exchange_rates_monthly.csv` | One pair of KRW-denominated rates per month | 130 |
+| `search_trends_monthly.csv` | Two summed keyword-interest indices per month | 130 |
+| `k_culture_interest_monthly.csv` | Four group means and their composite per month | 129 |
+| `tourism_features_monthly.csv` | All current signals and calendar terms on visitor months | 129 |
+| `tourism_features_monthly_with_lags.csv` | Current signals plus explicit calendar-month lags | 129 |
 
-- Source Excel files for monthly foreign arrivals by purpose.
-- The reproducible pipeline filters the tourism-purpose row only.
+| Column | Meaning / unit |
+| --- | --- |
+| `date` | Observation month; **not** a release timestamp |
+| `visitors` | Nonnegative integer foreign arrivals for tourism purpose, not all foreign arrivals |
+| `usd_krw` | KRW per US dollar |
+| `jpy_krw_100` | KRW per 100 Japanese yen; legacy raw `jpy_krw` unit assumption retained |
+| `google_search_index` | Sum of fixed-basket Web keyword indices; not search volume |
+| `youtube_search_index` | Sum of fixed-basket YouTube keyword indices |
+| `kpop_mean`, `kdrama_mean`, `kfood_mean`, `kculture_mean` | Arithmetic mean of the group's individual Web/YouTube export indices |
+| `k_index` | Equally weighted mean of the four group means |
+| `month_sin`, `month_cos` | `sin(2π × month / 12)` and `cos(2π × month / 12)` |
+| `<series>_lagN` | Value exactly N calendar months earlier, N ∈ {1, 2, 3, 12} |
 
-`data/raw/k_culture/`
+The six lagged series are arrivals, USD/KRW, KRW per 100 JPY, Google index, YouTube index, and the K-culture composite. Nulls are expected only in the initial lag warm-up. Current observed signals are retained for auditing and lag verification but never used directly as forecast features.
 
-- Individual Google Trends exports for K-pop, K-drama, K-food, and K-culture keywords.
-- Web Search and YouTube Search exports are kept in separate folders.
+`raw/foreign_visitors/` holds the workbooks; `raw/k_culture/` separates Web and YouTube exports; `raw/search_trends/` holds long keyword tables; `raw/exchange_rates/` retains the original exchange tables. `external/` is an ignored staging area for optional downloads.
 
-`data/raw/search_trends/`
-
-- Keyword-level monthly Google/YouTube Trends tables.
-- These are summed into monthly search-interest index features. Google Trends values are normalized indices, not absolute search counts.
-
-`data/raw/exchange_rates/`
-
-- Monthly exchange-rate data used by the modeling feature table.
-
-## Processed Data
-
-`foreign_visitors_monthly.csv`
-
-- `date`: Month start date.
-- `visitors`: Foreign arrivals for tourism purpose.
-
-`exchange_rates_monthly.csv`
-
-- `date`: Month start date.
-- `usd_krw`: Korean won per US dollar.
-- `jpy_krw_100`: Korean won per 100 Japanese yen, when available.
-- `cny_krw`: Korean won per Chinese yuan, only included when coverage is sufficient.
-
-`search_trends_monthly.csv`
-
-- `date`: Month start date.
-- `google_search_index`: Sum of keyword-level Google Trends indices.
-- `youtube_search_index`: Sum of keyword-level YouTube Trends indices.
-
-`k_culture_interest_monthly.csv`
-
-- `kpop_mean`, `kdrama_mean`, `kfood_mean`, `kculture_mean`: Group-level mean Trends indices.
-- `k_index`: Average of available group means.
-
-`tourism_features_monthly.csv`
-
-- Model-ready monthly table combining exchange rates, search-interest indices, K-culture interest, visitors, and known calendar indicators.
-
-`tourism_features_monthly_with_lags.csv`
-
-- Same as `tourism_features_monthly.csv`, plus 1-, 2-, 3-, and 12-month lag features for key predictors. Forecast models should use lagged observed predictors only.
+See [source provenance](../docs/DATA_SOURCES.md) for attribution caveats and [methodology](../docs/METHODOLOGY.md) for aggregation details.
